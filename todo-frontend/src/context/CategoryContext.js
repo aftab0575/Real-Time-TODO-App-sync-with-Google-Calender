@@ -14,6 +14,9 @@ export const CategoryProvider = ({ children }) => {
   const [error, setError] = useState(null);
   // Get token from Redux auth state
   const token = useSelector(state => state.auth.token);
+  
+  // Get the backend URL from environment, with fallback
+  const backendBaseUrl = process.env.REACT_APP_BACKEND_BASE_URL || 'https://real-time-todo-app-sync-with-google.onrender.com';
 
   // Fetch all categories
   const fetchCategories = async () => {
@@ -21,12 +24,15 @@ export const CategoryProvider = ({ children }) => {
     setError(null);
     try {
       console.log('[CategoryContext] Fetching categories with token:', token);
-      const response = await axios.get('/api/categories', {
+      const response = await axios.get(`${backendBaseUrl}/api/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setCategories(response.data);
+      
+      // Ensure response.data is an array
+      const categoriesData = Array.isArray(response.data) ? response.data : [];
+      setCategories(categoriesData);
       setError(null);
-      console.log('[CategoryContext] Categories fetched:', response.data);
+      console.log('[CategoryContext] Categories fetched:', categoriesData);
     } catch (err) {
       console.error('[CategoryContext] Error fetching categories:', err);
       setError(err.response?.data?.message || 'Error fetching categories');
@@ -39,7 +45,7 @@ export const CategoryProvider = ({ children }) => {
   // Create a new category
   const createCategory = async (categoryData) => {
     try {
-      const response = await axios.post('/api/categories', categoryData, {
+      const response = await axios.post(`${backendBaseUrl}/api/categories`, categoryData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCategories(prev => [...prev, response.data]);
@@ -53,7 +59,7 @@ export const CategoryProvider = ({ children }) => {
   // Update a category
   const updateCategory = async (id, categoryData) => {
     try {
-      const response = await axios.put(`/api/categories/${id}`, categoryData, {
+      const response = await axios.put(`${backendBaseUrl}/api/categories/${id}`, categoryData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCategories(prev => 
@@ -71,7 +77,7 @@ export const CategoryProvider = ({ children }) => {
   // Delete a category
   const deleteCategory = async (id) => {
     try {
-      await axios.delete(`/api/categories/${id}`, {
+      await axios.delete(`${backendBaseUrl}/api/categories/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCategories(prev => prev.filter(category => category._id !== id));
