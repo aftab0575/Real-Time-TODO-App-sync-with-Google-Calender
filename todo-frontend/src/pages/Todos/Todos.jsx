@@ -59,9 +59,9 @@ const pulseAnimation = keyframes`
 
 const Todos = () => {
   const dispatch = useDispatch();
-  const { items: todos, loading, error, socketConnected } = useSelector((state) => state.todos);
+  const { items: todos = [], loading, error, socketConnected } = useSelector((state) => state.todos);
   const { token, user } = useSelector((state) => state.auth);
-  const { categories, loading: categoriesLoading } = useCategories();
+  const { categories = [], loading: categoriesLoading } = useCategories();
 
   // Debug: Log fetched todos
   console.log("Fetched todos:", todos);
@@ -112,7 +112,7 @@ const Todos = () => {
 
   // Set default category when categories are loaded
   useEffect(() => {
-    if (categories.length > 0 && !selectedCategory) {
+    if (Array.isArray(categories) && categories.length > 0 && !selectedCategory) {
       const defaultCategory = categories.find(cat => cat.isDefault) || categories[0];
       setSelectedCategory(defaultCategory._id);
     }
@@ -207,7 +207,7 @@ const Todos = () => {
       
       // Upload using axios directly
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_BASE_URL}/api/todos/${todoId}/attachments`,
+        `${process.env.REACT_APP_BACKEND_BASE_URL || 'https://real-time-todo-app-sync-with-google.onrender.com'}/api/todos/${todoId}/attachments`,
         formData,
         config
       );
@@ -235,9 +235,11 @@ const Todos = () => {
   };
 
   // Filter todos by category
-  const filteredTodos = filterCategory === 'all' 
-    ? todos 
-    : todos.filter(todo => todo.category === filterCategory);
+  const filteredTodos = !Array.isArray(todos) 
+    ? [] 
+    : (filterCategory === 'all' 
+      ? todos 
+      : todos.filter(todo => todo.category === filterCategory));
 
   if (loading || categoriesLoading) {
     return (
@@ -385,7 +387,7 @@ const Todos = () => {
               displayEmpty
               renderValue={(selected) => {
                 if (selected === 'all') return 'All Categories';
-                const category = categories.find(c => c._id === selected);
+                const category = Array.isArray(categories) ? categories.find(c => c._id === selected) : null;
                 return (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Box 
@@ -408,7 +410,7 @@ const Todos = () => {
                   All Categories
                 </Box>
               </MenuItem>
-              {categories.map(category => (
+              {Array.isArray(categories) ? categories.map(category => (
                 <MenuItem key={category._id} value={category._id}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Box 
@@ -422,7 +424,7 @@ const Todos = () => {
                     {category.name}
                   </Box>
                 </MenuItem>
-              ))}
+              )) : null}
             </Select>
           </FormControl>
         </Box>
