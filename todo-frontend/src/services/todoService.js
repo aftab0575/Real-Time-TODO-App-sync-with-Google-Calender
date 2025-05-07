@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api/todos';
+const API_URL = 'https://real-time-todo-app-sync-with-google.onrender.com/api/todos';
 
 const getAuthHeader = () => {
     const token = localStorage.getItem('token');
